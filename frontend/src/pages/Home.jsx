@@ -155,6 +155,7 @@ const Home = () => {
                     placeholder="Search doctors, specialties..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -177,6 +178,7 @@ const Home = () => {
                     placeholder="Location"
                     value={location}
                     onChange={(e) => setLocation(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">

@@ -98,6 +98,9 @@ function App() {
                 element={user ? <Navigate to={getPortalPath()} /> : <AuthSuccess onLogin={handleLogin} />}
               />
 
+              {/* Admin login route */}
+              <Route path="/admin" element={user?.role?.toUpperCase() === 'ADMIN' ? <Navigate to="/admin-portal" /> : <Login onLogin={handleLogin} adminOnly />} />
+
               {/* Public routes */}
               <Route path="/doctors" element={<Doctors />} />
               <Route path="/doctors/:id" element={<DoctorProfile />} />
