@@ -25,7 +25,8 @@ app.use(cors({
       'http://localhost:3000',
       'https://bluevitals.onrender.com',
       'https://blue-vitals.onrender.com',
-      'https://blue-2-b3zo.onrender.com'
+      'https://blue-2-b3zo.onrender.com',
+      'https://blue-vitals-end-sem.onrender.com'
     ].filter(Boolean);
 
     // Allow non-browser server-to-server requests (no origin) as well
