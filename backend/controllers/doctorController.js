@@ -8,9 +8,7 @@ const getDoctors = async (req, res) => {
     let where = {};
     if (speciality) where.speciality = { contains: speciality };
     if (hospitalId) where.hospitalId = hospitalId;
-    if (city && !hospitalId) {
-      where.hospital = { city: { contains: city } };
-    }
+    if (city) where.city = { contains: city, mode: 'insensitive' };
 
     const doctors = await prisma.doctor.findMany({
       where,
@@ -79,7 +77,7 @@ const getDoctorById = async (req, res) => {
 const createDoctorProfile = async (req, res) => {
   try {
     const { userId } = req.user;
-    const { hospitalId, speciality, experience, fees, qualification } = req.body;
+    const { hospitalId, speciality, experience, fees, qualification, city } = req.body;
 
     const existingDoctor = await prisma.doctor.findUnique({ where: { userId } });
     if (existingDoctor) {
@@ -97,7 +95,8 @@ const createDoctorProfile = async (req, res) => {
         speciality,
         experience: parseInt(experience),
         fees: parseInt(fees),
-        qualification
+        qualification,
+        city: city || null
       },
       include: {
         user: { select: { name: true, email: true } },
