@@ -1,35 +1,28 @@
 services:
-  # Backend API Service
   - type: web
     name: healthcare-backend
     env: node
-    buildCommand: npm install && npx prisma generate --schema=backend/prisma/schema.prisma
-    startCommand: npm start --workspace=backend
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 3001
       - key: DATABASE_URL
-        fromDatabase:
-          name: healthcare-db
-          property: connectionString
+        sync: false
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
         sync: false
-
-  # Frontend Static Site
-  - type: web
-    name: healthcare-frontend
-    env: static
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/dist
-    envVars:
-      - key: VITE_API_URL
-        value: https://healthcare-backend.onrender.com
-
-databases:
-  - name: healthcare-db
-    databaseName: healthcare_db
-    user: healthcare_user
+      - key: GOOGLE_CALLBACK_URL
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
