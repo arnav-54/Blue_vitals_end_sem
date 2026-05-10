@@ -5,22 +5,65 @@ import {
   Container,
   TextField,
   InputAdornment,
-  Avatar,
   Rating,
 } from '@mui/material';
-import {
-  Search,
-  LocationOn,
-  AirportShuttle,
-  CalendarToday,
-  LocalHospital,
-  Favorite,
-  Psychology,
-  Accessibility,
-  ChildCare,
-  Visibility,
-  MedicalServices,
-} from '@mui/icons-material';
+import { Search, LocationOn } from '@mui/icons-material';
+
+const IconAmbulance = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 17H3a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h11l4 4v6a1 1 0 0 1-1 1h-1"/>
+    <path d="M14 17H10"/>
+    <circle cx="7.5" cy="17.5" r="2.5"/>
+    <circle cx="17.5" cy="17.5" r="2.5"/>
+    <path d="M8 10V7"/>
+    <path d="M6.5 8.5h3"/>
+  </svg>
+);
+
+const IconCalendar = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2"/>
+    <path d="M16 2v4"/>
+    <path d="M8 2v4"/>
+    <path d="M3 10h18"/>
+    <path d="M8 14h.01"/>
+    <path d="M12 14h.01"/>
+    <path d="M16 14h.01"/>
+    <path d="M8 18h.01"/>
+    <path d="M12 18h.01"/>
+  </svg>
+);
+
+const IconHospital = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 6v4"/>
+    <path d="M10 8h4"/>
+    <path d="M3 21V8a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v13"/>
+    <path d="M1 21h22"/>
+    <path d="M9 21v-4a3 3 0 0 1 6 0v4"/>
+  </svg>
+);
+
+const IconDoctor = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="4"/>
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+  </svg>
+);
+
+const IconClock = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+    <circle cx="12" cy="12" r="10"/>
+    <path d="M12 6v6l4 2"/>
+  </svg>
+);
+
+const IconPin = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ width: 14, height: 14 }}>
+    <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z"/>
+    <circle cx="12" cy="10" r="3"/>
+  </svg>
+);
 import { motion } from 'framer-motion';
 import api from '../services/api';
 import './Home.css';
@@ -245,28 +288,31 @@ const Home = () => {
           <div className="grid grid-3">
             {[
               {
-                icon: <AirportShuttle className="action-icon emergency" />,
+                icon: <IconAmbulance />,
                 title: 'Emergency Care',
                 description: 'Get immediate medical attention with our 24/7 emergency services',
                 buttonText: 'Call Ambulance',
                 type: 'emergency',
-                action: 'emergency'
+                action: 'emergency',
+                color: 'var(--color-error)'
               },
               {
-                icon: <CalendarToday className="action-icon" />,
+                icon: <IconCalendar />,
                 title: 'Book Appointment',
                 description: 'Schedule consultations with top doctors at your preferred time',
                 buttonText: 'Book Now',
                 type: 'primary',
-                action: 'appointment'
+                action: 'appointment',
+                color: 'var(--color-primary-600)'
               },
               {
-                icon: <LocalHospital className="action-icon" />,
+                icon: <IconHospital />,
                 title: 'Find Hospitals',
                 description: 'Locate nearby hospitals with advanced medical facilities',
                 buttonText: 'Find Hospitals',
                 type: 'primary',
-                action: 'hospitals'
+                action: 'hospitals',
+                color: 'var(--color-primary-600)'
               },
             ].map((action, index) => (
               <motion.div
@@ -277,7 +323,7 @@ const Home = () => {
                 viewport={{ once: true }}
               >
                 <div className="action-card">
-                  <div className={`action-icon ${action.type === 'emergency' ? 'emergency' : ''}`}>
+                  <div className={`action-icon ${action.type === 'emergency' ? 'emergency' : ''}`} style={{ color: action.color }}>
                     {action.icon}
                   </div>
                   <h3>{action.title}</h3>
@@ -308,7 +354,7 @@ const Home = () => {
             <div className="premium-loading-container" style={{ minHeight: '300px' }}>
               <div className="medical-loader">
                 <div className="pulse-ring"></div>
-                <LocalHospital style={{ width: 32, height: 32 }} className="loader-icon" />
+                <div className="loader-icon" style={{ width: 32, height: 32, color: 'var(--color-primary-600)' }}><IconHospital /></div>
               </div>
               <p className="loading-text">Loading top-rated doctors...</p>
               <div className="loading-progress-bar">
@@ -328,19 +374,16 @@ const Home = () => {
                   >
                     <div className="card">
                       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1.5rem' }}>
-                        <Avatar
-                          sx={{
-                            width: 60,
-                            height: 60,
-                            bgcolor: 'var(--color-primary-50)',
-                            color: 'var(--color-primary-600)',
-                            mr: 2,
-                            border: '2px solid white',
-                            boxShadow: 'var(--shadow-sm)'
-                          }}
-                        >
-                          <LocalHospital />
-                        </Avatar>
+                        <div style={{
+                          width: 60, height: 60, borderRadius: '50%',
+                          background: 'var(--color-primary-50)',
+                          color: 'var(--color-primary-600)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          marginRight: '1rem', border: '2px solid white',
+                          boxShadow: 'var(--shadow-sm)', flexShrink: 0, padding: 14, boxSizing: 'border-box'
+                        }}>
+                          <IconDoctor />
+                        </div>
                         <div>
                           <div className={`status-pill ${doctor.available ? 'CONFIRMED' : 'REJECTED'}`}>
                             {doctor.available ? 'Available' : 'Busy'}
@@ -354,10 +397,10 @@ const Home = () => {
                       </p>
                       <div style={{ color: 'var(--color-gray-500)', fontSize: '0.85rem', marginBottom: '1rem' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.25rem' }}>
-                          <CalendarToday style={{ fontSize: '0.9rem' }} /> {doctor.experience}
+                          <IconClock /> {doctor.experience}
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                          <LocationOn style={{ fontSize: '0.9rem' }} /> {doctor.hospital}
+                          <IconPin /> {doctor.hospital}
                         </div>
                       </div>
 
@@ -400,14 +443,38 @@ const Home = () => {
           </div>
           <div className="grid grid-4">
             {[
-              { name: 'Cardiologist', label: 'Cardiology', icon: <Favorite />, count: '150+', color: '#ef4444' },
-              { name: 'Neurologist', label: 'Neurology', icon: <Psychology />, count: '120+', color: 'var(--color-primary-600)' },
-              { name: 'Orthopedic', label: 'Orthopedics', icon: <Accessibility />, count: '200+', color: '#f59e0b' },
-              { name: 'Pediatrician', label: 'Pediatrics', icon: <ChildCare />, count: '180+', color: 'var(--color-success)' },
-              { name: 'Dermatologist', label: 'Dermatology', icon: <MedicalServices />, count: '90+', color: '#8b5cf6' },
-              { name: 'Gynecologist', label: 'Gynecology', icon: <MedicalServices />, count: '110+', color: '#ec4899' },
-              { name: 'Dentist', label: 'Dentistry', icon: <MedicalServices />, count: '160+', color: '#06b6d4' },
-              { name: 'Ophthalmologist', label: 'Ophthalmology', icon: <Visibility />, count: '80+', color: '#f97316' },
+              {
+                name: 'Cardiologist', label: 'Cardiology', count: '150+', color: '#ef4444',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+              },
+              {
+                name: 'Neurologist', label: 'Neurology', count: '120+', color: '#7c3aed',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.46 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 1.98-3A2.5 2.5 0 0 1 9.5 2Z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.46 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-1.98-3A2.5 2.5 0 0 0 14.5 2Z"/></svg>
+              },
+              {
+                name: 'Orthopedic', label: 'Orthopedics', count: '200+', color: '#f59e0b',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6H5a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h13l4-3.5L18 6Z"/><path d="M12 13v8"/><path d="M12 3v3"/></svg>
+              },
+              {
+                name: 'Pediatrician', label: 'Pediatrics', count: '180+', color: '#10b981',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 12h.01"/><path d="M15 12h.01"/><path d="M10 16c.5.3 1.2.5 2 .5s1.5-.2 2-.5"/><path d="M19 6.3a9 9 0 0 1 1.8 3.9 2 2 0 0 1 0 3.6 9 9 0 0 1-17.6 0 2 2 0 0 1 0-3.6A9 9 0 0 1 12 3c2 0 3.5 1.1 3.5 2.5s-.9 2.5-2 3"/></svg>
+              },
+              {
+                name: 'Dermatologist', label: 'Dermatology', count: '90+', color: '#8b5cf6',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
+              },
+              {
+                name: 'Gynecologist', label: 'Gynecology', count: '110+', color: '#ec4899',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="5"/><path d="M12 13v8"/><path d="M9 18h6"/></svg>
+              },
+              {
+                name: 'Dentist', label: 'Dentistry', count: '160+', color: '#06b6d4',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5.5c-1.5-2-4-2.5-5.5-1C4 6 4 9 6 11l6 9 6-9c2-2 2-5-.5-6.5C16 3 13.5 3.5 12 5.5Z"/></svg>
+              },
+              {
+                name: 'Ophthalmologist', label: 'Ophthalmology', count: '80+', color: '#f97316',
+                icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              },
             ].map((specialty, index) => (
               <motion.div
                 key={index}
