@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
+const { MongoStore } = require('connect-mongo');
 const passport = require('./config/passport');
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
@@ -46,11 +47,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'fallback_secret',
   resave: false,
   saveUninitialized: false,
+  store: MongoStore.create({ mongoUrl: process.env.DATABASE_URL }),
   cookie: {
-    // In production, cookies should be secure and cross-site cookies require SameSite=None
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    maxAge: 24 * 60 * 60 * 1000
   }
 }));
 
