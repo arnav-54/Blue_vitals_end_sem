@@ -156,53 +156,52 @@ const Navbar = ({ user, onLogout }) => {
             </Box>
           )}
 
-          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ ml: 'auto', display: 'flex', alignItems: 'center', gap: 1 }}>
             {user ? (
               <>
+                {!isMobile && (
+                  <Button
+                    component={Link}
+                    to={getPortalPath()}
+                    variant="contained"
+                    startIcon={<Dashboard />}
+                    sx={{
+                      backgroundColor: '#3b82f6',
+                      color: 'white',
+                      borderRadius: '50px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      px: 3,
+                      py: 1,
+                      boxShadow: '0 4px 14px 0 rgba(59, 130, 246, 0.39)',
+                      '&:hover': { backgroundColor: '#2563eb' },
+                    }}
+                  >
+                    Dashboard
+                  </Button>
+                )}
                 <Button
                   onClick={handleProfileMenuOpen}
                   startIcon={
-                    <Avatar
-                      sx={{
-                        width: 32,
-                        height: 32,
-                        background: 'linear-gradient(135deg, #4DB6E2, #3A9BC1)',
-                      }}
-                    >
+                    <Avatar sx={{ width: 32, height: 32, background: 'linear-gradient(135deg, #4DB6E2, #3A9BC1)' }}>
                       <AccountCircle />
                     </Avatar>
                   }
-                  sx={{
-                    color: 'text.primary',
-                    textTransform: 'none',
-                    fontWeight: 500,
-                  }}
+                  sx={{ color: 'text.primary', textTransform: 'none', fontWeight: 500 }}
                 >
-                  Hi, {user.name}
+                  {!isMobile && `Hi, ${user.name}`}
                 </Button>
                 <Menu
                   anchorEl={anchorEl}
                   open={Boolean(anchorEl)}
                   onClose={handleProfileMenuClose}
-                  PaperProps={{
-                    sx: {
-                      mt: 1,
-                      borderRadius: 2,
-                      boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.12)',
-                    },
-                  }}
+                  PaperProps={{ sx: { mt: 1, borderRadius: 2, boxShadow: '0px 8px 30px rgba(0, 0, 0, 0.12)' } }}
                 >
-                  <MenuItem
-                    component={Link}
-                    to={getPortalPath()}
-                    onClick={handleProfileMenuClose}
-                  >
-                    <Dashboard sx={{ mr: 1 }} />
-                    Dashboard
+                  <MenuItem component={Link} to={getPortalPath()} onClick={handleProfileMenuClose}>
+                    <Dashboard sx={{ mr: 1 }} /> Dashboard
                   </MenuItem>
                   <MenuItem onClick={handleLogout}>
-                    <Logout sx={{ mr: 1 }} />
-                    Logout
+                    <Logout sx={{ mr: 1 }} /> Logout
                   </MenuItem>
                 </Menu>
               </>
