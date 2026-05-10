@@ -16,20 +16,7 @@ router.get('/hospital/:hospitalId/doctors', authenticateToken, async (req, res) 
       }
     });
 
-    const formattedDoctors = doctors.map(doctor => ({
-      id: doctor.id,
-      name: doctor.user.name,
-      specialization: doctor.speciality,
-      designation: 'Consultant', // This could be added to the schema
-      experience: `${doctor.experience} years`,
-      qualification: doctor.qualification,
-      phone: doctor.user.phone,
-      email: doctor.user.email,
-      status: 'ACTIVE',
-      joinDate: doctor.createdAt
-    }));
-
-    res.json(formattedDoctors);
+    res.json(doctors);
   } catch (error) {
     console.error('Error fetching hospital doctors:', error);
     res.status(500).json({ error: 'Failed to fetch doctors' });
@@ -44,23 +31,12 @@ router.get('/hospital/:hospitalId/bed-bookings', authenticateToken, async (req, 
     const bedBookings = await prisma.bedBooking.findMany({
       where: { hospitalId },
       include: {
-        patient: {
-          include: { user: true }
-        }
-      }
+        patient: { include: { user: { select: { name: true, phone: true } } } }
+      },
+      orderBy: { createdAt: 'desc' }
     });
 
-    const formattedBookings = bedBookings.map(booking => ({
-      id: booking.id,
-      patientName: booking.patient.user.name,
-      bedType: booking.bedType,
-      checkIn: booking.admissionDate.toISOString().split('T')[0],
-      status: booking.status,
-      amount: booking.totalAmount || 0,
-      room: 'N/A'
-    }));
-
-    res.json(formattedBookings);
+    res.json(bedBookings);
   } catch (error) {
     console.error('Error fetching bed bookings:', error);
     res.status(500).json({ error: 'Failed to fetch bed bookings' });
