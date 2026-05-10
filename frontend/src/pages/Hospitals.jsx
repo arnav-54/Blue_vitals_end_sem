@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Building2, MapPin, Phone, Clock, Search, Filter, 
-  ChevronRight, Star, Bed, ShieldCheck, Activity,
+  ChevronRight, Star, ShieldCheck, Activity,
   Stethoscope, Users, Heart, ArrowRight, X, PhoneCall,
   AlertCircle
 } from 'lucide-react';
@@ -23,30 +23,15 @@ const Hospitals = () => {
   const [bedForm, setBedForm] = useState({ admissionType: 'General', urgency: 'Normal' });
 
   useEffect(() => {
-    const fetchHospitals = async () => {
-      try {
-        let apiData = [];
-        try {
-          const response = await api.getHospitals();
-          if (response.ok) apiData = await response.json();
-        } catch (e) { console.warn("API Fail", e); }
-
-        const eliteDataRaw = localStorage.getItem('elite_hospitals');
-        const eliteData = eliteDataRaw ? JSON.parse(eliteDataRaw) : [];
-        const finalData = Array.isArray(apiData) ? [...eliteData, ...apiData] : eliteData;
-        setHospitals(finalData);
-      } catch (error) {
-        console.error('Fetch error:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHospitals();
+    api.getHospitals()
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setHospitals(Array.isArray(data) ? data : []))
+      .catch(() => toast.error('Failed to load hospitals'))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleOpenBedModal = (hospital) => {
-    const user = localStorage.getItem('user');
-    if (!user) {
+    if (!localStorage.getItem('token')) {
       toast.error('Please login to reserve a bed');
       navigate('/login');
       return;
@@ -54,21 +39,29 @@ const Hospitals = () => {
     setShowBedModal(hospital);
   };
 
-  const submitBedRequest = (e) => {
+  const submitBedRequest = async (e) => {
     e.preventDefault();
-    toast.success(`Bed Request Sent to ${showBedModal.name}!`);
-    const updated = hospitals.map(h => {
-      if (h.id === showBedModal.id) return { ...h, beds: Math.max(0, (parseInt(h.beds) || 100) - 1) };
-      return h;
-    });
-    setHospitals(updated);
-    localStorage.setItem('elite_hospitals', JSON.stringify(updated));
-    setShowBedModal(null);
+    try {
+      const token = localStorage.getItem('token');
+      const bedTypeMap = { 'General Ward': 'GENERAL', 'Private Suite': 'PRIVATE', 'ICU Care': 'ICU' };
+      const res = await api.createBedBooking({
+        hospitalId: showBedModal.id,
+        bedType: bedTypeMap[bedForm.admissionType] || 'GENERAL',
+        admissionDate: new Date().toISOString(),
+      }, token);
+      if (!res.ok) throw new Error();
+      toast.success(`Bed booked at ${showBedModal.name}!`);
+      setShowBedModal(null);
+    } catch {
+      toast.error('Booking failed. Please try again.');
+    }
   };
 
+  const cities = ['All Cities', ...new Set(hospitals.map(h => h.city).filter(Boolean))];
+
   const filteredHospitals = hospitals.filter(hosp => {
-    const matchesSearch = (hosp.name || "").toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         (hosp.city || "").toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (hosp.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (hosp.city || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCity = selectedCity === 'All Cities' || hosp.city === selectedCity;
     return matchesSearch && matchesCity;
   });
@@ -92,10 +85,7 @@ const Hospitals = () => {
             <div className="filter-wrapper">
               <MapPin size={20} />
               <select className="location-filter" value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)}>
-                <option>All Cities</option>
-                <option>Mumbai</option>
-                <option>Delhi</option>
-                <option>Bangalore</option>
+                {cities.map(c => <option key={c}>{c}</option>)}
               </select>
             </div>
           </div>
@@ -116,11 +106,10 @@ const Hospitals = () => {
               </div>
 
               <div className="hospital-details">
-                <div className="detail-item"><MapPin size={16} /> <span>{hosp.address || hosp.city || 'Regional Center'}</span></div>
-                <div className="detail-item"><Phone size={16} /> <span>+91 98XXX XXXXX</span></div>
-                
+                <div className="detail-item"><MapPin size={16} /> <span>{hosp.address || hosp.city}</span></div>
+                {hosp.phone && <div className="detail-item"><Phone size={16} /> <span>{hosp.phone}</span></div>}
                 <div className="hospital-stats">
-                  <div className="stat-item"><Bed size={16} /> <span>{hosp.beds || '100'} Beds Available</span></div>
+                  <div className="stat-item"><Users size={16} /> <span>{hosp.doctors?.length || 0} Doctors</span></div>
                   <div className="stat-item emergency"><AlertCircle size={16} /> <span className="emergency-badge">24/7 ER Active</span></div>
                 </div>
               </div>
