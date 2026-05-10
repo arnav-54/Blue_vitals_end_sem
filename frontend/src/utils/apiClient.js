@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://blue-1-makf.onrender.com/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 const apiClient = {
   async get(endpoint, retries = 3) {
