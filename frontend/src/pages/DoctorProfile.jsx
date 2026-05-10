@@ -31,62 +31,25 @@ const DoctorProfile = () => {
         const fetchDoctorDetails = async () => {
             try {
                 setLoading(true);
-                
-                // 🔍 Check Local Admin Registry first (For Sheli Pandey & others)
-                const eliteDoctorsRaw = localStorage.getItem('elite_doctors');
-                let eliteDoctors = [];
-                try { eliteDoctors = eliteDoctorsRaw ? JSON.parse(eliteDoctorsRaw) : []; } catch (e) { eliteDoctors = []; }
-                
-                // Try to find the doctor in the local registry (using string comparison for ID safety)
-                const localDoc = eliteDoctors.find(d => String(d.id) === String(id));
-
-                if (localDoc) {
-                    setDoctor({
-                        ...localDoc,
-                        experience: localDoc.experience || '12 years',
-                        rating: localDoc.rating || 4.5,
-                        reviews: localDoc.reviews || Math.floor(Math.random() * 150),
-                        qualification: localDoc.qualification || 'MBBS, MD',
-                        bio: localDoc.bio || `Dr. ${localDoc.name} is a highly experienced specialist dedicated to providing exceptional care in ${localDoc.specialty}.`,
-                        available: true,
-                        achievements: [
-                            "Top Rated Specialist 2024",
-                            "Medical Excellence Award",
-                            "Board Certified Professional"
-                        ]
-                    });
-                    setLoading(false);
-                    return;
-                }
-
-                // 🌐 Fallback to API for database doctors
-                try {
-                    const response = await api.getDoctorById(id);
-                    if (response.ok) {
-                        const data = await response.json();
-                        setDoctor({
-                            id: data.id,
-                            name: data.user?.name || 'Unknown Doctor',
-                            specialty: data.speciality,
-                            experience: `${data.experience}+ years`,
-                            rating: data.averageRating || 4.5,
-                            reviews: data.totalReviews || 0,
-                            fee: data.fees,
-                            hospital: (data.hospital && typeof data.hospital === 'object') ? (data.hospital.name || 'Elite Hub') : (data.hospital || 'Elite Hub'),
-                            location: (data.hospital && typeof data.hospital === 'object') ? (data.hospital.city || 'Mumbai') : (data.location || 'Mumbai'),
-                            qualification: data.qualification || 'Specialist',
-                            bio: data.bio || `Dr. ${data.user?.name} is a highly experienced ${data.speciality} dedicated to providing exceptional care.`,
-                            available: data.isAvailable !== false,
-                            achievements: ["Top Rated Specialist 2023", "Medical Excellence Award", "Board Certified Professional"]
-                        });
-                        setLoading(false);
-                        return;
-                    }
-                } catch (apiErr) { console.warn("API Doctor Fetch Failed"); }
-
-                throw new Error('Doctor not found');
+                const response = await api.getDoctorById(id);
+                if (!response.ok) throw new Error('Doctor not found');
+                const data = await response.json();
+                setDoctor({
+                    id: data.id,
+                    name: data.user?.name || 'Unknown Doctor',
+                    specialty: data.speciality,
+                    experience: `${data.experience}+ years`,
+                    rating: data.averageRating || 4.5,
+                    reviews: data.totalReviews || 0,
+                    fee: data.fees,
+                    hospital: typeof data.hospital === 'object' ? (data.hospital?.name || 'Hospital') : (data.hospital || 'Hospital'),
+                    location: typeof data.hospital === 'object' ? (data.hospital?.city || 'Pune') : 'Pune',
+                    qualification: data.qualification || 'Specialist',
+                    bio: `Dr. ${data.user?.name} is a highly experienced ${data.speciality} specialist dedicated to providing exceptional patient care.`,
+                    available: data.isAvailable !== false,
+                    achievements: ['Top Rated Specialist 2024', 'Medical Excellence Award', 'Board Certified Professional']
+                });
             } catch (err) {
-                console.error('Error fetching doctor:', err);
                 setError(err.message);
             } finally {
                 setLoading(false);
@@ -115,13 +78,13 @@ const DoctorProfile = () => {
 
     if (error || !doctor) return (
         <div className="profile-error-container">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                <h2>Oops! Profile Not Found</h2>
-                <p>The clinician profile you are looking for is currently being updated.</p>
+            <div>
+                <h2>Profile Not Found</h2>
+                <p>The doctor profile you are looking for could not be loaded.</p>
                 <button onClick={() => navigate('/doctors')} className="back-btn">
                     <ChevronLeft size={20} /> Back to Search
                 </button>
-            </motion.div>
+            </div>
         </div>
     );
 
@@ -197,6 +160,14 @@ const DoctorProfile = () => {
                     </aside>
                 </div>
             </div>
+
+            {showBooking && (
+                <AppointmentBooking
+                    doctor={doctor}
+                    onClose={() => setShowBooking(false)}
+                    onSuccess={() => { setShowBooking(false); navigate('/user-portal?tab=appointments'); }}
+                />
+            )}
         </div>
     );
 };
