@@ -9,29 +9,62 @@ const generateToken = (userId, role) => {
 
 const register = async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body;
-    
+    const { name, email, password, phone, role, city, address, speciality, experience, fees, qualification, hospitalId } = req.body;
+
     if (!name || !email || !password || !role) {
       return res.status(400).json({ error: 'Name, email, password, and role are required' });
     }
-    
+
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'User already exists' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    
+
     const user = await prisma.user.create({
       data: { name, email, password: hashedPassword, phone, role }
     });
+
+    let extraData = {};
+
+    if (role === 'HOSPITAL') {
+      const hospital = await prisma.hospital.create({
+        data: {
+          name,
+          city: city || 'Not specified',
+          address: address || 'Not specified',
+          phone: phone || null,
+          userId: user.id
+        }
+      });
+      extraData.hospital = hospital;
+    }
+
+    if (role === 'DOCTOR') {
+      if (speciality && experience && fees && qualification) {
+        const doctor = await prisma.doctor.create({
+          data: {
+            userId: user.id,
+            hospitalId: hospitalId || null,
+            speciality,
+            experience: parseInt(experience),
+            fees: parseInt(fees),
+            qualification,
+            city: city || null
+          },
+          include: { hospital: { select: { name: true, city: true } } }
+        });
+        extraData.doctor = doctor;
+      }
+    }
 
     const token = generateToken(user.id, user.role);
     
     res.status(201).json({
       message: 'User registered successfully',
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role }
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, ...extraData }
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -89,7 +122,7 @@ const login = async (req, res) => {
 
     if (user.role === 'HOSPITAL') {
       const hospitalData = await prisma.hospital.findFirst({
-        where: { email: user.email }
+        where: { userId: user.id }
       });
       response.user.hospital = hospitalData;
     }
