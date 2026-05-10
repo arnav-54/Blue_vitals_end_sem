@@ -50,7 +50,11 @@ const login = async (req, res) => {
     const user = await prisma.user.findUnique({ 
       where: { email },
       include: {
-        doctor: true,
+        doctor: {
+          include: {
+            hospital: { select: { name: true, city: true } }
+          }
+        },
         patient: true
       }
     });
@@ -77,10 +81,17 @@ const login = async (req, res) => {
 
     // Add profile IDs if they exist
     if (user.doctor) {
-      response.doctorId = user.doctor.id;
+      response.user.doctor = user.doctor;
     }
     if (user.patient) {
-      response.patientId = user.patient.id;
+      response.user.patient = user.patient;
+    }
+
+    if (user.role === 'HOSPITAL') {
+      const hospitalData = await prisma.hospital.findFirst({
+        where: { email: user.email }
+      });
+      response.user.hospital = hospitalData;
     }
     
     res.json(response);

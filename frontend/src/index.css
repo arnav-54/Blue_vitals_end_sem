@@ -55,6 +55,10 @@
   --radius-lg: 1rem;
   --radius-md: 0.75rem;
   --radius-sm: 0.5rem;
+
+  /* Dashboard Portals Specific */
+  --portal-sidebar-width: 280px;
+  --portal-header-height: 64px;
 }
 
 html {
@@ -257,6 +261,8 @@ h4 {
 .py-8 {
   padding: 2rem 0;
 }
+
+.text-error { color: var(--color-error) !important; }
 
 /* Global Premium Medical Loading Styles */
 .premium-loading-container {

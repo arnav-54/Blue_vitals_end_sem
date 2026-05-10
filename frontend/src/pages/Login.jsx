@@ -1,149 +1,155 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useNavigate, Link } from 'react-router-dom';
+import { 
+  Mail, Lock, Eye, EyeOff, LogIn, ShieldCheck, 
+  User, Building2, Stethoscope, Heart, ArrowRight, Info
+} from 'lucide-react';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 import api from '../services/api';
-import GoogleLoginButton from '../components/GoogleLoginButton';
 import './Auth.css';
 
 const Login = ({ onLogin }) => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState('PATIENT');
+  
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
   });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError('');
+
+    const inputEmail = (formData.email || '').trim().toLowerCase();
+    const inputPass = (formData.password || '').trim();
 
     try {
-      const response = await api.login(formData);
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        if (data.user) {
-          localStorage.setItem('user', JSON.stringify(data.user));
-        }
-        localStorage.setItem('userId', data.user.id);
-        localStorage.setItem('userRole', data.user.role);
-
-        // Store role-specific IDs
-        if (data.user.role === 'DOCTOR' && data.doctor) {
-          localStorage.setItem('doctorId', data.doctor.id);
-        } else if (data.user.role === 'PATIENT' && data.patient) {
-          localStorage.setItem('patientId', data.patient.id);
-        } else if (data.user.role === 'HOSPITAL' && data.hospital) {
-          localStorage.setItem('hospitalId', data.hospital.id);
-        }
-
-        onLogin(data.user);
-
-        navigate('/user-portal');
-      } else {
-        setError(data.error || 'Login failed');
+      // 🛡️ 1. MASTER ADMIN BYPASS
+      if (inputEmail === 'admin@healthcare.com' && inputPass === 'admin123') {
+        const adminUser = { id: 'MASTER_ADMIN', name: 'System Admin', email: 'admin@healthcare.com', role: 'ADMIN' };
+        localStorage.setItem('user', JSON.stringify(adminUser));
+        localStorage.setItem('token', 'MASTER_TOKEN');
+        onLogin(adminUser);
+        toast.success('Admin Authority Verified');
+        navigate('/admin-portal');
+        return;
       }
-    } catch (err) {
-      setError('Network error. Please try again.');
+
+      // 🔍 2. ELITE ONBOARDED AUTH BRIDGE (For Admin-created Doctors & Hospitals)
+      const bridgeAuth = JSON.parse(localStorage.getItem('elite_onboarded_auth') || '[]');
+      const matched = bridgeAuth.find(a => 
+        (a.email || '').trim().toLowerCase() === inputEmail && 
+        (a.password || '').trim() === inputPass
+      );
+      
+      if (matched) {
+        const bridgeUser = { ...matched };
+        delete bridgeUser.password; // Security cleanup
+        localStorage.setItem('user', JSON.stringify(bridgeUser));
+        localStorage.setItem('token', 'BRIDGE_TOKEN_' + (bridgeUser.id || Date.now()));
+        onLogin(bridgeUser);
+        toast.success(`Welcome back, ${bridgeUser.name}`);
+        
+        const role = bridgeUser.role?.toUpperCase();
+        if (role === 'DOCTOR') navigate('/doctor-portal');
+        else if (role === 'HOSPITAL') navigate('/hospital-portal');
+        else navigate('/user-portal');
+        return;
+      }
+
+      // 🌐 3. STANDARD API AUTH
+      const response = await api.login({ email: inputEmail, password: inputPass });
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        onLogin(data.user);
+        toast.success(`Welcome back, ${data.user.name}`);
+        
+        const role = data.user.role?.toUpperCase();
+        if (role === 'ADMIN') navigate('/admin-portal');
+        else if (role === 'DOCTOR') navigate('/doctor-portal');
+        else if (role === 'HOSPITAL') navigate('/hospital-portal');
+        else navigate('/user-portal');
+      } else {
+        toast.error('Invalid credentials. Check your role or details.');
+      }
+    } catch (error) {
+      console.error("Login System Error:", error);
+      toast.error('Connection failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
+  const roles = [
+    { id: 'PATIENT', label: 'Patient', icon: <Heart size={20} />, color: '#ef4444' },
+    { id: 'DOCTOR', label: 'Doctor', icon: <Stethoscope size={20} />, color: '#3b82f6' },
+    { id: 'HOSPITAL', label: 'Hospital', icon: <Building2 size={20} />, color: '#7c3aed' },
+    { id: 'ADMIN', label: 'Admin', icon: <ShieldCheck size={20} />, color: '#0f172a' },
+  ];
+
   return (
-    <div className="auth-page">
-      <div className="auth-container">
-        <div className="auth-header">
-          <h1>Welcome Back</h1>
-          <p>Sign in to your BlueVitals account</p>
-        </div>
-
-        <GoogleLoginButton text="Sign in with Google" />
-
-        <div className="divider">
-          <span>or</span>
-        </div>
-
-        <form onSubmit={handleSubmit} className="auth-form">
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
-
-          <div className="form-group">
-            <label htmlFor="email">Email Address</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Enter your email"
-            />
+    <div className="auth-page-elite">
+      <div className="auth-container-glass">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="auth-card-elite">
+          <div className="auth-header-elite">
+            <div className="logo-symbol-elite"><Heart fill="#3b82f6" color="#3b82f6" /></div>
+            <h1>Secure Portal Access</h1>
+            <p>Enter your credentials to manage your node</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <div className="password-input">
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                required
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="password-toggle"
-              >
-                {showPassword ? <FaEyeSlash /> : <FaEye />}
+          <div className="role-selector-elite">
+            {roles.map(role => (
+              <button key={role.id} type="button" onClick={() => setSelectedRole(role.id)} className={`role-pill ${selectedRole === role.id ? 'active' : ''}`} style={{ '--role-color': role.color }}>
+                {role.icon} <span>{role.label}</span>
               </button>
+            ))}
+          </div>
+
+          <form onSubmit={handleSubmit} className="auth-form-elite">
+            <div className="input-group-elite">
+              <label><Mail size={16} /> Email Address</label>
+              <input type="email" name="email" required placeholder="name@example.com" value={formData.email} onChange={handleChange} />
             </div>
+
+            <div className="input-group-elite">
+              <label><Lock size={16} /> Password</label>
+              <div className="password-wrapper-elite">
+                <input type={showPassword ? 'text' : 'password'} name="password" required placeholder="••••••••" value={formData.password} onChange={handleChange} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="eye-btn-elite">
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            </div>
+
+            {selectedRole === 'ADMIN' && (
+              <div className="demo-hint-elite">
+                <Info size={16} />
+                <div>
+                  <strong>Demo Admin Access:</strong>
+                  <p>Email: admin@healthcare.com | Pass: admin123</p>
+                </div>
+              </div>
+            )}
+
+            <button type="submit" disabled={loading} className="btn-auth-submit">
+              {loading ? 'Validating Token...' : 'Sign In To Portal'} <ArrowRight size={18} />
+            </button>
+          </form>
+
+          <div className="auth-footer-elite">
+            <p>New member? <Link to="/register">Create Node Account</Link></p>
           </div>
-
-          <div className="form-options">
-            <label className="checkbox-label">
-              <input type="checkbox" />
-              Remember me
-            </label>
-            <Link to="/forgot-password" className="forgot-link">
-              Forgot password?
-            </Link>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary btn-large auth-submit"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <div className="auth-footer">
-          <p>
-            Don't have an account?{' '}
-            <Link to="/register" className="auth-link">
-              Sign up here
-            </Link>
-          </p>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

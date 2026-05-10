@@ -14,10 +14,11 @@ import Hospitals from './pages/Hospitals';
 import Services from './pages/Services';
 import Emergency from './pages/Emergency';
 import UserPortal from './pages/UserPortal';
+import DoctorPortal from './pages/DoctorPortal';
+import HospitalPortal from './pages/HospitalPortal';
+import AdminPortal from './pages/AdminPortal';
 import DoctorProfile from './pages/DoctorProfile';
 import ChatAssistant from './components/Assistant/ChatAssistant';
-
-
 import RoleSelection from './pages/RoleSelection';
 import AuthSuccess from './pages/AuthSuccess';
 
@@ -60,7 +61,15 @@ function App() {
     setUser(null);
   };
 
-
+  // Determine which portal to redirect to based on role
+  const getPortalPath = () => {
+    if (!user) return '/login';
+    const role = user.role?.toUpperCase();
+    if (role === 'DOCTOR') return '/doctor-portal';
+    if (role === 'HOSPITAL') return '/hospital-portal';
+    if (role === 'ADMIN') return '/admin-portal';
+    return '/user-portal';
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -74,30 +83,29 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route
                 path="/login"
-                element={user ? <Navigate to="/user-portal" /> : <Login onLogin={handleLogin} />}
+                element={user ? <Navigate to={getPortalPath()} /> : <Login onLogin={handleLogin} />}
               />
               <Route
                 path="/register"
-                element={user ? <Navigate to="/user-portal" /> : <Register onLogin={handleLogin} />}
+                element={user ? <Navigate to={getPortalPath()} /> : <Register onLogin={handleLogin} />}
               />
               <Route
                 path="/select-role"
-                element={user ? <Navigate to="/user-portal" /> : <RoleSelection onLogin={handleLogin} />}
+                element={user ? <Navigate to={getPortalPath()} /> : <RoleSelection onLogin={handleLogin} />}
               />
               <Route
                 path="/auth-success"
-                element={user ? <Navigate to="/user-portal" /> : <AuthSuccess onLogin={handleLogin} />}
+                element={user ? <Navigate to={getPortalPath()} /> : <AuthSuccess onLogin={handleLogin} />}
               />
 
-              {/* Public routes - accessible to everyone */}
+              {/* Public routes */}
               <Route path="/doctors" element={<Doctors />} />
               <Route path="/doctors/:id" element={<DoctorProfile />} />
               <Route path="/hospitals" element={<Hospitals />} />
-
               <Route path="/services" element={<Services />} />
               <Route path="/emergency" element={<Emergency />} />
 
-              {/* Protected role-based routes - Only User/Patient remains */}
+              {/* Patient Portal */}
               <Route
                 path="/user-portal"
                 element={
@@ -106,9 +114,36 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              {/* Redirect any unknown role or other portal attempts to user portal or home */}
-              <Route path="/doctor-portal/*" element={<Navigate to="/user-portal" replace />} />
-              <Route path="/hospital-portal/*" element={<Navigate to="/user-portal" replace />} />
+
+              {/* Doctor Portal */}
+              <Route
+                path="/doctor-portal"
+                element={
+                  <ProtectedRoute user={user} allowedRoles={['doctor']}>
+                    <DoctorPortal />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Hospital Portal */}
+              <Route
+                path="/hospital-portal"
+                element={
+                  <ProtectedRoute user={user} allowedRoles={['hospital']}>
+                    <HospitalPortal />
+                  </ProtectedRoute>
+                }
+              />
+
+              {/* Admin Portal */}
+              <Route
+                path="/admin-portal"
+                element={
+                  <ProtectedRoute user={user} allowedRoles={['admin']}>
+                    <AdminPortal />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
           <ChatAssistant />

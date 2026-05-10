@@ -1,0 +1,156 @@
+/* DoctorPortal.css - Professional Grid & Components */
+
+.stats-grid-premium {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.stat-card-new {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: all 0.2s;
+}
+
+.stat-card-new:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+}
+
+.stat-icon-new {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.stat-data-new h3 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.stat-data-new p {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.portal-grid-two-cols {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.5rem;
+}
+
+.portal-card-main {
+  background: white;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  padding: 2rem;
+}
+
+.card-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.card-header-flex h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.appointments-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.appointment-item-new {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.appointment-item-new:hover {
+  background: white;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.08);
+}
+
+.p-info { display: flex; align-items: center; gap: 1rem; flex: 1; }
+.p-avatar { width: 36px; height: 36px; border-radius: 50%; background: #3b82f6; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.875rem; }
+.p-name { font-weight: 700; color: #1e293b; font-size: 0.9375rem; }
+.p-meta { font-size: 0.75rem; color: #64748b; }
+
+.p-time { display: flex; align-items: center; gap: 0.4rem; font-size: 0.8125rem; font-weight: 600; color: #475569; min-width: 100px; }
+.p-status { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; padding: 0.25rem 0.625rem; border-radius: 6px; min-width: 90px; text-align: center; }
+.p-status.confirmed { background: #dcfce7; color: #166534; }
+.p-status.pending { background: #fef9c3; color: #854d0e; }
+
+.p-action { border: none; background: transparent; color: #94a3b8; cursor: pointer; padding: 4px; border-radius: 4px; }
+.p-action:hover { color: #3b82f6; background: #eff6ff; }
+
+.widget-box {
+  background: white;
+  border-radius: 1.25rem;
+  border: 1px solid #e2e8f0;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.widget-box h4 { font-size: 0.9375rem; margin-bottom: 1.25rem; }
+
+.trend-item { margin-bottom: 1rem; }
+.trend-item span { display: block; font-size: 0.75rem; color: #64748b; margin-bottom: 0.5rem; }
+.progress-bg { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 3px; }
+
+.quick-action-card {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  color: white;
+  padding: 1.75rem;
+  border-radius: 1.25rem;
+  text-align: center;
+}
+
+.quick-action-card h5 { font-size: 1.1rem; margin: 0.75rem 0 0.5rem; }
+.quick-action-card p { font-size: 0.8125rem; opacity: 0.8; margin-bottom: 1.25rem; }
+
+.btn-primary-block {
+  width: 100%;
+  background: white;
+  color: #2563eb;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+@media (max-width: 1200px) {
+  .stats-grid-premium { grid-template-columns: repeat(2, 1fr); }
+  .portal-grid-two-cols { grid-template-columns: 1fr; }
+}

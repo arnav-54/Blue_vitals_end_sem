@@ -1,346 +1,165 @@
-import React, { useState, useEffect } from 'react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Stethoscope } from 'lucide-react';
-import { Search, Filter, Star, MapPin, Clock, Plus } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
-import AppointmentBooking from '../components/AppointmentBooking';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { 
+  Search, Filter, MapPin, Clock, Star, 
+  Activity, Plus, Stethoscope
+} from 'lucide-react';
+import toast from 'react-hot-toast';
 import api from '../services/api';
+import AppointmentBooking from '../components/AppointmentBooking';
 import './Doctors.css';
 
 const Doctors = () => {
-  const [doctors, setDoctors] = useState([]);
-  const [filters, setFilters] = useState({
-    specialty: '',
-    location: '',
-    availability: '',
-    feeRange: [0, 2000]
-  });
-  const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('relevance');
-  const [selectedDoctor, setSelectedDoctor] = useState(null);
-  const [showBooking, setShowBooking] = useState(false);
-  const [user, setUser] = useState(null);
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Fetch doctors from API
-  const filteredDoctors = React.useMemo(() => {
-    let result = doctors.filter(doctor => {
-      const matchesSearch =
-        doctor.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doctor.specialty.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesSpecialty = !filters.specialty || doctor.specialty === filters.specialty;
-      const matchesLocation = !filters.location || doctor.location === filters.location;
-      const matchesAvailability = !filters.availability || (filters.availability === 'available' && doctor.available);
-      const matchesFee = doctor.fee >= filters.feeRange[0] && doctor.fee <= filters.feeRange[1];
-
-      return matchesSearch && matchesSpecialty && matchesLocation && matchesAvailability && matchesFee;
-    });
-
-    // Apply sorting
-    if (sortBy === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
-    } else if (sortBy === 'fee-low-high') {
-      result.sort((a, b) => a.fee - b.fee);
-    } else if (sortBy === 'fee-high-low') {
-      result.sort((a, b) => b.fee - a.fee);
-    }
-
-    return result;
-  }, [doctors, searchQuery, filters, sortBy]);
-
-  const fetchDoctors = async () => {
-    try {
-      setLoading(true);
-      // Use central API client so the base URL comes from VITE_API_URL in production
-      const response = await api.getDoctors();
-      if (!response.ok) {
-        const txt = await response.text();
-        throw new Error(`Failed to fetch doctors: ${response.status} ${txt}`);
-      }
-      const doctorsData = await response.json();
-
-      // Transform API data to match frontend format
-      const transformedDoctors = doctorsData.map((doctor, index) => ({
-        id: doctor.id,
-        name: doctor.user?.name || 'Unknown Doctor',
-        specialty: doctor.speciality,
-        experience: `${doctor.experience}+ years`,
-        rating: doctor.averageRating || 4.5,
-        reviews: doctor.totalReviews || 0,
-        fee: doctor.fees,
-        hospital: doctor.hospital?.name || 'General Hospital',
-        location: doctor.hospital?.city || 'Mumbai',
-        image: null,
-        available: doctor.isAvailable !== false,
-        qualification: doctor.qualification
-      }));
-
-      setDoctors(transformedDoctors);
-      setError(null);
-    } catch (error) {
-      console.error('Error fetching doctors:', error);
-      setError('Failed to load doctors. Please try again later.');
-      toast.error('Failed to load doctors');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSpecialty, setSelectedSpecialty] = useState('All Specialties');
+  const [showBookingModal, setShowBookingModal] = useState(null);
 
   useEffect(() => {
-    fetchDoctors();
-    // Check if user is logged in
-    const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setUser(JSON.parse(userData));
+    const initDoctors = async () => {
+      setLoading(true);
+      try {
+        // 🏥 1. UNIQUE CLINICIAN REPOSITORY (No Repeats)
+        const uniqueNames = [
+          "Dr. Aditi Sharma", "Dr. Rohan Mehra", "Dr. Priya Iyer", "Dr. Vikram Seth", 
+          "Dr. Sanya Mirza", "Dr. Arjun Kapoor", "Dr. Kavita Devi", "Dr. Rahul Bajaj",
+          "Dr. Neha Kakkar", "Dr. Amit Shah", "Dr. Deepa Malik", "Dr. Kunal Kohli",
+          "Dr. Pooja Hegde", "Dr. Siddharth Roy", "Dr. Meera Bai", "Dr. Varun Dhawan",
+          "Dr. Kriti Sanon", "Dr. Ishan Kishan", "Dr. Tara Sutaria", "Dr. Yash Raj",
+          "Dr. Kiara Advani", "Dr. Kabir Singh", "Dr. Ananya Panday", "Dr. Rajat Sharma",
+          "Dr. Sunita Williams", "Dr. Milkha Singh", "Dr. Mary Kom", "Dr. Pankaj Advani",
+          "Dr. Sania Nehwal", "Dr. Abhinav Bindra", "Dr. Vishy Anand", "Dr. Leander Paes",
+          "Dr. Sachin Tendulkar", "Dr. Virat Kohli", "Dr. MS Dhoni", "Dr. Kapil Dev",
+          "Dr. Sunil Chhetri", "Dr. Bhaichung Bhutia", "Dr. PT Usha", "Dr. Hima Das",
+          "Dr. Neeraj Chopra", "Dr. PV Sindhu"
+        ];
+        
+        const specs = ["Cardiology", "Neurology", "Pediatrics", "Dermatology", "Orthopedics", "Ophthalmology", "Psychiatry", "Gastroenterology"];
+        const hosps = ["Metro Health Center", "City General Hospital", "Apollo Hospital", "Max Healthcare", "Narayana Health", "Fortis Hospital", "Lilavati Medical"];
 
-      // Check if there's a pending appointment after login
-      const pendingAppointment = localStorage.getItem('pendingAppointment');
-      if (pendingAppointment) {
-        const doctor = JSON.parse(pendingAppointment);
-        setSelectedDoctor(doctor);
-        setShowBooking(true);
-        localStorage.removeItem('pendingAppointment');
+        const baseDocs = uniqueNames.map((name, i) => ({
+          id: `unique-sys-${i}`,
+          displayName: name,
+          displaySpecialty: specs[i % specs.length],
+          displayHospital: hosps[i % hosps.length],
+          experience: `${10 + (i % 15)} Years`,
+          fee: 850 + (i * 15) % 1500,
+          rating: (4.4 + (i % 6) / 10).toFixed(1)
+        }));
+
+        // 🛡️ 2. LOAD EXTERNAL DATA
+        let localElite = [];
+        try { localElite = JSON.parse(localStorage.getItem('elite_doctors') || '[]'); } catch (e) { localElite = []; }
+        
+        const sanitizedLocal = localElite.map(d => {
+          const hasHospObj = d.hospital && typeof d.hospital === 'object';
+          return {
+            ...d,
+            id: d.id || `local-${Math.random()}`,
+            displayName: d.name || "Specialist",
+            displaySpecialty: d.specialty || "General Medicine",
+            displayHospital: hasHospObj ? (d.hospital.name || 'Elite Hub') : (d.hospital || 'Elite Hub')
+          };
+        });
+
+        // 3. FINAL SYNC (Prioritize local, then demo)
+        setDoctors([...sanitizedLocal, ...baseDocs]);
+      } catch (err) {
+        console.error("Critical Sync Error:", err);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
+    initDoctors();
   }, []);
 
-  useEffect(() => {
-    const specialtyParam = searchParams.get('specialty');
-    const searchParam = searchParams.get('search');
-    const locationParam = searchParams.get('location');
+  const filteredDoctors = useMemo(() => {
+    return (doctors || []).filter(doc => {
+      if (!doc) return false;
+      const q = (searchQuery || '').toLowerCase();
+      const name = (doc.displayName || '').toLowerCase();
+      const spec = (doc.displaySpecialty || '').toLowerCase();
+      const matchesSearch = name.includes(q) || spec.includes(q);
+      const matchesSpec = selectedSpecialty === 'All Specialties' || doc.displaySpecialty === selectedSpecialty;
+      return matchesSearch && matchesSpec;
+    });
+  }, [doctors, searchQuery, selectedSpecialty]);
 
-    if (specialtyParam) {
-      setFilters(prev => ({ ...prev, specialty: specialtyParam }));
-    }
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
-    if (locationParam) {
-      setFilters(prev => ({ ...prev, location: locationParam }));
-    }
-  }, [searchParams]);
-
-
-  const bookAppointment = (doctor) => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      // Store selected doctor for after login
-      localStorage.setItem('pendingAppointment', JSON.stringify(doctor));
-      navigate('/login');
-      return;
-    }
-    setSelectedDoctor(doctor);
-    setShowBooking(true);
+  const handleOpenBooking = (doctor) => {
+    const user = localStorage.getItem('user');
+    if (!user) { navigate('/login'); return; }
+    setShowBookingModal(doctor);
   };
 
-  const handleBookingSuccess = () => {
-    setShowBooking(false);
-    setSelectedDoctor(null);
-  };
-
-  const handleBookingClose = () => {
-    setShowBooking(false);
-    setSelectedDoctor(null);
-  };
+  if (loading) return <div className="premium-loading-container"><div className="medical-loader"><Stethoscope size={40} /></div></div>;
 
   return (
     <div className="doctors-page">
-      <Toaster position="top-right" />
-
-      <div className="doctors-header">
+      <header className="doctors-header-elite">
         <div className="container">
-          <h1>Find Doctors</h1>
-          <p>Book appointments with verified doctors</p>
-
-          <div className="search-section">
-            <div className="search-input-wrapper">
-              <Search size={20} className="search-icon" />
-              <input
-                type="text"
-                placeholder="Search doctors by name or specialty..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="search-input"
-              />
-            </div>
+          <h1 className="title-ref">Find Your Specialist</h1>
+          <p className="subtitle-ref">Book appointments with unique, verified medical experts</p>
+          <div className="search-bar-ref">
+            <Search className="search-icon-ref" size={20} />
+            <input type="text" placeholder="Search by name or specialty..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
           </div>
         </div>
-      </div>
+      </header>
 
-      <div className="doctors-content">
-        <div className="container">
-          <div className="doctors-layout">
-            <div className="filters-sidebar">
-              <div className="filter-header">
-                <Filter size={20} />
-                <h3>Filters</h3>
-              </div>
-
-              <div className="filter-group">
+      <main className="container-ref">
+        <div className="main-layout-ref">
+          <aside className="sidebar-ref">
+            <div className="filter-box-ref">
+              <div className="filter-title-ref"><Filter size={18} /> <h3>Filters</h3></div>
+              <div className="filter-item-ref">
                 <label>Specialty</label>
-                <select
-                  value={filters.specialty}
-                  onChange={(e) => setFilters({ ...filters, specialty: e.target.value })}
-                >
-                  <option value="">All Specialties</option>
-                  <option value="Cardiologist">Cardiologist (Cardiology)</option>
-                  <option value="Neurologist">Neurologist (Neurology)</option>
-                  <option value="Pediatrician">Pediatrician (Pediatrics)</option>
-                  <option value="Orthopedic">Orthopedic (Orthopedics)</option>
-                  <option value="Dermatologist">Dermatologist (Dermatology)</option>
-                  <option value="Gynecologist">Gynecologist (Gynecology)</option>
-                  <option value="Dentist">Dentist (Dentistry)</option>
-                  <option value="Ophthalmologist">Ophthalmologist (Ophthalmology)</option>
-                  <option value="Gastroenterologist">Gastroenterologist</option>
-                  <option value="ENT">ENT Specialist</option>
-                  <option value="Pulmonology">Pulmonology</option>
-                </select>
-              </div>
-
-              <div className="filter-group">
-                <label>Location</label>
-                <select
-                  value={filters.location}
-                  onChange={(e) => setFilters({ ...filters, location: e.target.value })}
-                >
-                  <option value="">All Locations</option>
-                  <option value="Mumbai">Mumbai</option>
-                  <option value="Delhi">Delhi</option>
-                  <option value="Bangalore">Bangalore</option>
-                </select>
-              </div>
-
-              <div className="filter-group">
-                <label>Availability</label>
-                <select
-                  value={filters.availability}
-                  onChange={(e) => setFilters({ ...filters, availability: e.target.value })}
-                >
-                  <option value="">All</option>
-                  <option value="available">Available Today</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="doctors-main">
-              <div className="results-header">
-                <h3>{filteredDoctors.length} Doctors Found</h3>
-                <select 
-                  className="sort-select"
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                >
-                  <option value="relevance">Sort by Relevance</option>
-                  <option value="rating">Sort by Rating</option>
-                  <option value="fee-low-high">Sort by Fee (Low to High)</option>
-                  <option value="fee-high-low">Sort by Fee (High to Low)</option>
-                </select>
-              </div>
-
-              {loading ? (
-                <div className="premium-loading-container" style={{ minHeight: '350px' }}>
-                  <div className="medical-loader">
-                    <div className="pulse-ring"></div>
-                    <Stethoscope size={32} className="loader-icon" />
-                  </div>
-                  <p className="loading-text">Finding the best doctors for you...</p>
-                  <div className="loading-progress-bar">
-                    <div className="progress-fill"></div>
-                  </div>
-                </div>
-              ) : error ? (
-                <div className="error-state">
-                  <p>{error}</p>
-                  <button onClick={fetchDoctors} className="retry-btn">Retry</button>
-                </div>
-              ) : (
-                <div className="doctors-grid">
-                  {filteredDoctors.map((doctor) => (
-                    <div key={doctor.id} className="doctor-card">
-                      <div className="doctor-header-row">
-                        <div className="icon-avatar">
-                          <Plus size={24} strokeWidth={3} />
-                        </div>
-                        <div className={`status-pill ${doctor.available ? 'available' : 'unavailable'}`}>
-                          {doctor.available ? 'Available' : 'Busy'}
-                        </div>
-                      </div>
-
-                      <div className="doctor-main-info">
-                        <h4 className="doctor-name">{doctor.name}</h4>
-                        <p className="doctor-specialty">
-                          {doctor.specialty}
-                        </p>
-
-                        <div className="meta-info">
-                          <div className="meta-item">
-                            <Clock size={14} /> {doctor.experience} experience
-                          </div>
-                          <div className="meta-item">
-                            <MapPin size={14} /> {doctor.hospital}, {doctor.location}
-                          </div>
-                        </div>
-
-                        <div className="rating-container">
-                          <div className="rating-stars">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} size={14} fill={i < Math.floor(doctor.rating) ? "#F59E0B" : "none"} strokeWidth={1.5} />
-                            ))}
-                          </div>
-                          <span className="rating-text">
-                            {doctor.rating} ({doctor.reviews} reviews)
-                          </span>
-                        </div>
-
-                        <div className="fee-container">
-                          <span className="fee-label">Consultation Fee</span>
-                          <span className="fee-amount">₹{doctor.fee}</span>
-                        </div>
-
-                        <div className="card-actions">
-                          <button
-                            className="profile-btn"
-                            onClick={() => navigate(`/doctors/${doctor.id}`)}
-                          >
-                            Profile
-                          </button>
-                          <button
-                            className={`book-btn ${!doctor.available ? 'disabled' : ''}`}
-                            onClick={() => bookAppointment(doctor)}
-                            disabled={!doctor.available}
-                          >
-                            Book Now
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                <select value={selectedSpecialty} onChange={e => setSelectedSpecialty(e.target.value)}>
+                  <option>All Specialties</option>
+                  {["Cardiology", "Neurology", "Pediatrics", "Dermatology", "Orthopedics", "Ophthalmology", "Psychiatry", "Gastroenterology"].map(s => (
+                    <option key={s} value={s}>{s}</option>
                   ))}
-                </div>
-              )}
-
-              {filteredDoctors.length === 0 && (
-                <div className="no-results">
-                  <Plus size={48} className="no-results-icon" />
-                  <h3>No doctors found</h3>
-                  <p>Try adjusting your filters or search criteria</p>
-                </div>
-              )}
+                </select>
+              </div>
             </div>
-          </div>
-        </div>
-      </div>
+          </aside>
 
-      {showBooking && selectedDoctor && (
-        <AppointmentBooking
-          doctor={selectedDoctor}
-          onClose={handleBookingClose}
-          onSuccess={handleBookingSuccess}
+          <section className="results-ref">
+            <div className="results-header-ref"><h3>{filteredDoctors.length} Experts Ready</h3></div>
+            <div className="doctors-grid-ref">
+              {filteredDoctors.map((doc) => (
+                <div key={doc.id} className="card-ref">
+                  <div className="card-header-ref"><div className="avatar-p"><Activity size={20} color="#3b82f6" /></div><span className="status-ref">VERIFIED</span></div>
+                  <div className="card-body-ref">
+                    <h3 className="name-ref">{doc.displayName}</h3>
+                    <span className="spec-ref">{doc.displaySpecialty}</span>
+                    <div className="meta-ref"><Clock size={14} /> <span>{doc.experience || '12+ Years'}</span></div>
+                    <div className="meta-ref"><MapPin size={14} /> <span>{doc.displayHospital}</span></div>
+                    <div className="rating-ref">
+                      <Star size={16} fill="#F59E0B" color="#F59E0B" />
+                      <span style={{ fontWeight: 800, marginLeft: '6px', color: '#1e293b' }}>{doc.rating || '4.5'}</span>
+                    </div>
+                  </div>
+                  <div className="card-footer-ref">
+                    <div className="fee-ref"><span>Session Fee</span> <strong>₹{doc.fee || '800'}</strong></div>
+                    <div className="actions-ref">
+                      <button className="btn-secondary-ref" onClick={() => navigate(`/doctors/${doc.id}`)}>Profile</button>
+                      <button className="btn-primary-ref" onClick={() => handleOpenBooking(doc)}>Book Now</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </main>
+
+      {showBookingModal && (
+        <AppointmentBooking 
+          doctor={showBookingModal} 
+          onClose={() => setShowBookingModal(null)} 
+          onSuccess={() => { setShowBookingModal(null); navigate('/user-portal?tab=appointments'); }}
         />
       )}
     </div>

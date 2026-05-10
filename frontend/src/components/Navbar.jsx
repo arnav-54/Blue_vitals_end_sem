@@ -49,25 +49,30 @@ const Navbar = ({ user, onLogout }) => {
     setMobileOpen(!mobileOpen);
   };
 
+  const getPortalPath = () => {
+    if (!user) return '/';
+    const role = user.role?.toUpperCase();
+    if (role === 'DOCTOR') return '/doctor-portal';
+    if (role === 'HOSPITAL') return '/hospital-portal';
+    if (role === 'ADMIN') return '/admin-portal';
+    return '/user-portal';
+  };
+
   const getMenuItems = () => {
-    // simplified for Patient/User only
+    const items = [
+      { text: 'Home', path: '/' },
+      { text: 'Doctors', path: '/doctors' },
+      { text: 'Hospitals', path: '/hospitals' },
+    ];
+
     if (user) {
-      return [
-        { text: 'Home', path: '/' },
-        { text: 'Doctors', path: '/doctors' },
-        { text: 'Hospitals', path: '/hospitals' },
-        { text: 'My Dashboard', path: '/user-portal' },
-        { text: 'Emergency', path: '/emergency' },
-      ];
+      items.push({ text: 'Dashboard', path: getPortalPath() });
     } else {
-      return [
-        { text: 'Home', path: '/' },
-        { text: 'Doctors', path: '/doctors' },
-        { text: 'Hospitals', path: '/hospitals' },
-        { text: 'Services', path: '/services' },
-        { text: 'Emergency', path: '/emergency' },
-      ];
+      items.push({ text: 'Services', path: '/services' });
     }
+
+    items.push({ text: 'Emergency', path: '/emergency' });
+    return items;
   };
 
   const menuItems = getMenuItems();
@@ -117,7 +122,7 @@ const Navbar = ({ user, onLogout }) => {
         <Toolbar sx={{ px: { xs: 2, md: 4 } }}>
           <Box
             component={Link}
-            to={user ? '/user-portal' : '/'}
+            to={getPortalPath()}
             sx={{
               display: 'flex',
               alignItems: 'center',
@@ -189,7 +194,7 @@ const Navbar = ({ user, onLogout }) => {
                 >
                   <MenuItem
                     component={Link}
-                    to="/user-portal"
+                    to={getPortalPath()}
                     onClick={handleProfileMenuClose}
                   >
                     <Dashboard sx={{ mr: 1 }} />

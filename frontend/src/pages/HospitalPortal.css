@@ -1,0 +1,128 @@
+/* HospitalPortal.css - Premium Hospital Dashboard */
+
+.hospital-portal {
+  min-height: 100vh;
+  background-color: var(--color-gray-50);
+  padding-bottom: 2rem;
+}
+
+.hospital-portal-loading {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  color: var(--color-gray-500);
+}
+
+/* Hospital Welcome */
+.hospital-welcome {
+  background: linear-gradient(135deg, #312e81, #4338ca, #4f46e5) !important;
+}
+
+/* Hospital Sidebar */
+.hospital-promo {
+  background: linear-gradient(135deg, #4338ca, #6366f1) !important;
+}
+
+/* Table 4-column */
+.table-4col {
+  grid-template-columns: 1.5fr 1fr 0.8fr 1.2fr !important;
+}
+
+/* Table 6-column */
+.table-6col {
+  grid-template-columns: 1.2fr 1fr 1fr 0.8fr 0.8fr 1.2fr !important;
+  min-width: 800px;
+}
+
+/* Doctor Staff Card */
+.doctor-staff-card .card-body {
+  padding: 1.5rem;
+}
+
+/* Recruit Card */
+.recruit-card .card-body {
+  padding: 1.5rem;
+}
+
+/* Search Box */
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 0.5rem;
+  background: white;
+}
+
+.search-box input {
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: var(--color-gray-700);
+  width: 180px;
+}
+
+.search-box input::placeholder {
+  color: var(--color-gray-400);
+}
+
+.search-box svg {
+  color: var(--color-gray-400);
+  flex-shrink: 0;
+}
+
+/* Full-width form group */
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Status pill variations */
+.status-pill.CHECKED_IN,
+.status-pill.checked_in {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.status-pill.CHECKED_OUT,
+.status-pill.checked_out {
+  background: #f3e8ff;
+  color: #7c3aed;
+}
+
+.status-pill.ACTIVE,
+.status-pill.active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .table-4col {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .table-4col span:nth-child(n+3) {
+    display: none;
+  }
+
+  .table-6col {
+    grid-template-columns: 1fr 1fr 1fr !important;
+    min-width: 0;
+  }
+
+  .table-6col span:nth-child(n+4) {
+    display: none;
+  }
+
+  .search-box input {
+    width: 120px;
+  }
+
+  .header-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
