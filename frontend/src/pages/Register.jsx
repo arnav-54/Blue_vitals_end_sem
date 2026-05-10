@@ -31,7 +31,7 @@ const Register = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const response = await api.register({ ...formData, role: selectedRole.toLowerCase() });
+      const response = await api.register({ ...formData, role: selectedRole });
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token);
@@ -42,6 +42,7 @@ const Register = ({ onLogin }) => {
         const role = data.user.role?.toUpperCase();
         if (role === 'DOCTOR') navigate('/doctor-portal');
         else if (role === 'HOSPITAL') navigate('/hospital-portal');
+        else if (role === 'ADMIN') navigate('/admin-portal');
         else navigate('/user-portal');
       } else {
         const error = await response.json();
