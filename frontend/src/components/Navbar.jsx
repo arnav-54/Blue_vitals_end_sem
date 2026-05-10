@@ -66,7 +66,7 @@ const Navbar = ({ user, onLogout }) => {
     ];
 
     if (user) {
-      items.push({ text: 'Dashboard', path: getPortalPath() });
+      // Dashboard is shown as a dedicated button on the right, not in nav links
     } else {
       items.push({ text: 'Services', path: '/services' });
     }
@@ -101,6 +101,16 @@ const Navbar = ({ user, onLogout }) => {
             </ListItem>
             <ListItem key="register" component={Link} to="/register" onClick={handleDrawerToggle}>
               <ListItemText primary="Sign Up" />
+            </ListItem>
+          </>
+        )}
+        {user && (
+          <>
+            <ListItem component={Link} to={getPortalPath()} onClick={handleDrawerToggle}>
+              <ListItemText primary="Dashboard" />
+            </ListItem>
+            <ListItem onClick={() => { onLogout(); navigate('/'); handleDrawerToggle(); }}>
+              <ListItemText primary="Logout" />
             </ListItem>
           </>
         )}
