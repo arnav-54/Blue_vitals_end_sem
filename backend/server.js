@@ -18,12 +18,14 @@ app.use(cors({
   origin: (origin, callback) => {
     // Build allowed list from env + known dev origins
     const allowed = [
-      process.env.FRONTEND_URL, // e.g. https://bluevitalls.netlify.app
+      process.env.FRONTEND_URL,
       'http://localhost:5173',
       'http://localhost:5174',
       'http://localhost:5175',
       'http://localhost:3000',
-      'https://bluevitals.onrender.com'
+      'https://bluevitals.onrender.com',
+      'https://blue-vitals.onrender.com',
+      'https://blue-2-b3zo.onrender.com'
     ].filter(Boolean);
 
     // Allow non-browser server-to-server requests (no origin) as well
