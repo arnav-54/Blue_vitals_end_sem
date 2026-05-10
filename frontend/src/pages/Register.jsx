@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   User, Mail, Phone, Lock, Eye, EyeOff, 
-  UserPlus, Building2, Stethoscope, Heart, ArrowRight, ShieldCheck
+  UserPlus, Building2, Stethoscope, Heart, ArrowRight, ShieldCheck, MapPin
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -14,16 +14,29 @@ const Register = ({ onLogin }) => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState('PATIENT');
+  const [hospitals, setHospitals] = useState([]);
   
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    password: '',
+    name: '', email: '', phone: '', password: '',
+    // Hospital fields
+    city: '', address: '',
+    // Doctor fields
+    speciality: '', experience: '', fees: '', qualification: '', hospitalId: '',
   });
+
+  useEffect(() => {
+    if (selectedRole === 'DOCTOR') {
+      api.getHospitals().then(r => r.ok ? r.json() : []).then(setHospitals).catch(() => {});
+    }
+  }, [selectedRole]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleRoleChange = (role) => {
+    setSelectedRole(role);
+    setFormData(prev => ({ ...prev, city: '', address: '', speciality: '', experience: '', fees: '', qualification: '', hospitalId: '' }));
   };
 
   const handleSubmit = async (e) => {
@@ -31,7 +44,8 @@ const Register = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const response = await api.register({ ...formData, role: selectedRole });
+      const payload = { ...formData, role: selectedRole };
+      const response = await api.register(payload);
       if (response.ok) {
         const data = await response.json();
         localStorage.setItem('token', data.token);
@@ -46,7 +60,7 @@ const Register = ({ onLogin }) => {
         else navigate('/user-portal');
       } else {
         const error = await response.json();
-        toast.error(error.message || 'Registration failed');
+        toast.error(error.message || error.error || 'Registration failed');
       }
     } catch (error) {
       toast.error('Connection failed');
@@ -74,7 +88,7 @@ const Register = ({ onLogin }) => {
 
           <div className="role-selector-elite">
             {roles.map(role => (
-              <button key={role.id} type="button" onClick={() => setSelectedRole(role.id)} className={`role-pill ${selectedRole === role.id ? 'active' : ''}`} style={{ '--role-color': role.color }}>
+              <button key={role.id} type="button" onClick={() => handleRoleChange(role.id)} className={`role-pill ${selectedRole === role.id ? 'active' : ''}`} style={{ '--role-color': role.color }}>
                 {role.icon} <span>{role.label}</span>
               </button>
             ))}
@@ -83,8 +97,8 @@ const Register = ({ onLogin }) => {
           <form onSubmit={handleSubmit} className="auth-form-elite">
             <div className="input-grid-elite">
               <div className="input-group-elite">
-                <label><User size={16} /> Full Name</label>
-                <input type="text" name="name" required placeholder="Enter name" value={formData.name} onChange={handleChange} />
+                <label><User size={16} /> Full Name {selectedRole === 'HOSPITAL' ? '(Hospital Name)' : ''}</label>
+                <input type="text" name="name" required placeholder={selectedRole === 'HOSPITAL' ? 'e.g. Apollo Hospital' : 'Enter name'} value={formData.name} onChange={handleChange} />
               </div>
               <div className="input-group-elite">
                 <label><Mail size={16} /> Email Address</label>
@@ -103,6 +117,52 @@ const Register = ({ onLogin }) => {
                   </button>
                 </div>
               </div>
+
+              {selectedRole === 'HOSPITAL' && (
+                <>
+                  <div className="input-group-elite">
+                    <label><MapPin size={16} /> City</label>
+                    <input type="text" name="city" required placeholder="e.g. Mumbai" value={formData.city} onChange={handleChange} />
+                  </div>
+                  <div className="input-group-elite">
+                    <label><Building2 size={16} /> Address</label>
+                    <input type="text" name="address" required placeholder="Full hospital address" value={formData.address} onChange={handleChange} />
+                  </div>
+                </>
+              )}
+
+              {selectedRole === 'DOCTOR' && (
+                <>
+                  <div className="input-group-elite">
+                    <label><Stethoscope size={16} /> Speciality</label>
+                    <input type="text" name="speciality" required placeholder="e.g. Cardiology" value={formData.speciality} onChange={handleChange} />
+                  </div>
+                  <div className="input-group-elite">
+                    <label><ShieldCheck size={16} /> Qualification</label>
+                    <input type="text" name="qualification" required placeholder="e.g. MBBS, MD" value={formData.qualification} onChange={handleChange} />
+                  </div>
+                  <div className="input-group-elite">
+                    <label><User size={16} /> Experience (years)</label>
+                    <input type="number" name="experience" required placeholder="e.g. 5" min="0" value={formData.experience} onChange={handleChange} />
+                  </div>
+                  <div className="input-group-elite">
+                    <label><ArrowRight size={16} /> Consultation Fees (₹)</label>
+                    <input type="number" name="fees" required placeholder="e.g. 500" min="0" value={formData.fees} onChange={handleChange} />
+                  </div>
+                  <div className="input-group-elite">
+                    <label><MapPin size={16} /> City</label>
+                    <input type="text" name="city" placeholder="e.g. Mumbai" value={formData.city} onChange={handleChange} />
+                  </div>
+                  <div className="input-group-elite" style={{ gridColumn: '1 / -1' }}>
+                    <label><Building2 size={16} /> Select Hospital (optional)</label>
+                    <select name="hospitalId" value={formData.hospitalId} onChange={handleChange}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: 10, border: '1.5px solid #e2e8f0', fontSize: '0.9rem', background: 'white' }}>
+                      <option value="">— Independent / No Hospital —</option>
+                      {hospitals.map(h => <option key={h.id} value={h.id}>{h.name} ({h.city})</option>)}
+                    </select>
+                  </div>
+                </>
+              )}
             </div>
 
             <button type="submit" disabled={loading} className="btn-auth-submit">

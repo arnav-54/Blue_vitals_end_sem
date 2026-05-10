@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
-  Mail, Lock, Eye, EyeOff, LogIn, ShieldCheck, 
+  Mail, Lock, Eye, EyeOff, LogIn,
   User, Building2, Stethoscope, Heart, ArrowRight, Info
 } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -9,11 +9,11 @@ import toast from 'react-hot-toast';
 import api from '../services/api';
 import './Auth.css';
 
-const Login = ({ onLogin }) => {
+const Login = ({ onLogin, adminOnly = false }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [selectedRole, setSelectedRole] = useState('PATIENT');
+  const [selectedRole, setSelectedRole] = useState(adminOnly ? 'ADMIN' : 'PATIENT');
   
   const [formData, setFormData] = useState({
     email: '',
@@ -94,7 +94,6 @@ const Login = ({ onLogin }) => {
     { id: 'PATIENT', label: 'Patient', icon: <Heart size={20} />, color: '#ef4444' },
     { id: 'DOCTOR', label: 'Doctor', icon: <Stethoscope size={20} />, color: '#3b82f6' },
     { id: 'HOSPITAL', label: 'Hospital', icon: <Building2 size={20} />, color: '#7c3aed' },
-    { id: 'ADMIN', label: 'Admin', icon: <ShieldCheck size={20} />, color: '#0f172a' },
   ];
 
   return (
@@ -103,17 +102,19 @@ const Login = ({ onLogin }) => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="auth-card-elite">
           <div className="auth-header-elite">
             <div className="logo-symbol-elite"><Heart fill="#3b82f6" color="#3b82f6" /></div>
-            <h1>Secure Portal Access</h1>
-            <p>Enter your credentials to manage your node</p>
+            <h1>{adminOnly ? 'Admin Portal' : 'Secure Portal Access'}</h1>
+            <p>{adminOnly ? 'Restricted access — admins only' : 'Enter your credentials to manage your node'}</p>
           </div>
 
-          <div className="role-selector-elite">
-            {roles.map(role => (
-              <button key={role.id} type="button" onClick={() => setSelectedRole(role.id)} className={`role-pill ${selectedRole === role.id ? 'active' : ''}`} style={{ '--role-color': role.color }}>
-                {role.icon} <span>{role.label}</span>
-              </button>
-            ))}
-          </div>
+          {!adminOnly && (
+            <div className="role-selector-elite">
+              {roles.map(role => (
+                <button key={role.id} type="button" onClick={() => setSelectedRole(role.id)} className={`role-pill ${selectedRole === role.id ? 'active' : ''}`} style={{ '--role-color': role.color }}>
+                  {role.icon} <span>{role.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="auth-form-elite">
             <div className="input-group-elite">
@@ -130,16 +131,6 @@ const Login = ({ onLogin }) => {
                 </button>
               </div>
             </div>
-
-            {selectedRole === 'ADMIN' && (
-              <div className="demo-hint-elite">
-                <Info size={16} />
-                <div>
-                  <strong>Demo Admin Access:</strong>
-                  <p>Email: admin@healthcare.com | Pass: admin123</p>
-                </div>
-              </div>
-            )}
 
             <button type="submit" disabled={loading} className="btn-auth-submit">
               {loading ? 'Validating Token...' : 'Sign In To Portal'} <ArrowRight size={18} />
