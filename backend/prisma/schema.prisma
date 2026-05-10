@@ -33,6 +33,7 @@ model Hospital {
   city      String
   address   String
   phone     String?
+  userId    String?   @db.ObjectId
 
   doctors     Doctor[]
   bedBookings BedBooking[]
@@ -48,6 +49,7 @@ model Doctor {
   experience   Int
   fees         Int
   qualification String
+  city         String?
   createdAt    DateTime        @default(now())
 
   user         User            @relation(fields: [userId], references: [id])
